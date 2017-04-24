@@ -86,7 +86,7 @@ namespace Middle
         private StationCollection Do(StaionCollectionRequest staionCollectionRequest)
         {
             HttpWebRequest stationRequest =
-                WebRequest.CreateHttp("http://www1.ncdc.noaa.gov/pub/data/noaa/ish-history.csv");
+                WebRequest.CreateHttp("http://www1.ncdc.noaa.gov/pub/data/noaa/isd-history.csv");
 
             if (staionCollectionRequest.LastRun != null)
             {
@@ -117,7 +117,7 @@ namespace Middle
                                     if (station != default(Station)) list.Add(station);
                                 }
                                 else if (stationLine ==
-                                         @"""USAF"",""WBAN"",""STATION NAME"",""CTRY"",""FIPS"",""STATE"",""CALL"",""LAT"",""LON"",""ELEV(.1M)"",""BEGIN"",""END""")
+                                         @"""USAF"",""WBAN"",""STATION NAME"",""CTRY"",""STATE"",""ICAO"",""LAT"",""LON"",""ELEV(M)"",""BEGIN"",""END""")
                                 {
                                     hasSeenHeader = true;
                                 }
@@ -163,7 +163,7 @@ namespace Middle
 
             string[] lineElements = line.Split(new[] {"\",\""}, StringSplitOptions.None);
 
-            if (lineElements.Length != 12)
+            if (lineElements.Length != 11)
                 throw new NotSupportedException("station csv bad");
 
             float tempFloat;
@@ -176,20 +176,20 @@ namespace Middle
                 },
                 Name = lineElements[2],
                 Country = lineElements[3],
-                FIPSCountryId = lineElements[4],
-                State = lineElements[5],
-                CallSign = lineElements[6],
-                Begin = ParseISO8601DashlessDate(lineElements[10]),
-                End = ParseISO8601DashlessDate(lineElements[11])
+                //FIPSCountryId = lineElements[4],
+                State = lineElements[4],
+                CallSign = lineElements[5],
+                Begin = ParseISO8601DashlessDate(lineElements[9]),
+                End = ParseISO8601DashlessDate(lineElements[10])
             };
 
-            if (station.FIPSCountryId != "US") return default(Station);
+            if (station.Country != "US") return default(Station);
 
-            if (float.TryParse(lineElements[7], out tempFloat)) station.Latitude = tempFloat/1000;
+            if (float.TryParse(lineElements[6], out tempFloat)) station.Latitude = tempFloat;
             else return default(Station);
-            if (float.TryParse(lineElements[8], out tempFloat)) station.Longitude = tempFloat/1000;
+            if (float.TryParse(lineElements[7], out tempFloat)) station.Longitude = tempFloat;
             else return default(Station);
-            if (float.TryParse(lineElements[9], out tempFloat)) station.Elevation = tempFloat/10;
+            if (float.TryParse(lineElements[8], out tempFloat)) station.Elevation = tempFloat;
 
 // ReSharper disable CompareOfFloatsByEqualityOperator
             if (station.Latitude == 0 || station.Longitude == 0) return default(Station);
